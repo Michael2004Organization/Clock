@@ -60,4 +60,10 @@ dependencies {
     //Navigation
     //runtimeOnly("androidx.navigation:navigation-compose:2.4.0-alpha01")
     implementation("androidx.navigation:navigation-compose:2.8.8")
+
+    //NTP
+    implementation("commons-net:commons-net:3.8.0")
+
+    //Coroutine
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
 }
