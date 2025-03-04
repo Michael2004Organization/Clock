@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.clock"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -59,7 +59,10 @@ dependencies {
 
     //Navigation
     //runtimeOnly("androidx.navigation:navigation-compose:2.4.0-alpha01")
-    implementation("androidx.navigation:navigation-compose:2.8.8")
+    implementation("androidx.navigation:navigation-compose:2.7.4")
+
+    //Material3
+    implementation("androidx.compose.material3:material3:1.3.1")
 
     //NTP
     implementation("commons-net:commons-net:3.8.0")
