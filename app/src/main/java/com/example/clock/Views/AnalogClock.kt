@@ -24,10 +24,7 @@ import com.example.clock.TestModels.ClockData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
 import java.time.LocalTime
-import java.util.Date
-import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -40,25 +37,24 @@ fun AnalogClockComposable(
     time: LocalTime = LocalTime.now(),
     isClockRunning: Boolean = true
 ) {
-    var seconds by remember { mutableStateOf(time.second + 4) }
+    var seconds by remember { mutableStateOf(time.second) }
     var minutes by remember { mutableStateOf(time.minute) }
-    var hours by remember { mutableStateOf(time.hour + 1) }
+    var hours by remember { mutableStateOf(time.hour) }
 
     var hourAngle by remember { mutableDoubleStateOf(value = 0.0) }
 
     // Colors
-    val clockCircleColor = Color.White
-    val timeNumberColor = android.graphics.Color.WHITE
-    val secondLineColor = Color.White
-    val eachFiveSecondLineColor = Color.White
+    val clockCircleColor = Color(0xFF3A3A5C)
+    val timeNumberColor = android.graphics.Color.parseColor("#AAAAAA")
+    val secondLineColor = Color(0xFF3A3A5C)
+    val eachFiveSecondLineColor = Color(0xFF6666AA)
 
-    val clockIngraviour = android.graphics.Color.RED
-    val clockPausedText = android.graphics.Color.MAGENTA
+    val clockPausedText = android.graphics.Color.parseColor("#6C63FF")
 
-    val centerCircleColor = Color.White
+    val centerCircleColor = Color(0xFF6C63FF)
     val hourLineColor = Color.White
-    val minuteLineColor = Color.White
-    val longSecondLineColor = Color.Red
+    val minuteLineColor = Color(0xFFDDDDDD)
+    val longSecondLineColor = Color(0xFF6C63FF)
 
     LaunchedEffect(isClockRunning) {
         if (isClockRunning) {
@@ -80,12 +76,12 @@ fun AnalogClockComposable(
         while (isClockRunning) {
             seconds += 1
 
-            if (seconds > 60) {
-                seconds = 1
+            if (seconds >= 60) {
+                seconds = 0
                 minutes++
             }
-            if (minutes > 60) {
-                minutes = 1
+            if (minutes >= 60) {
+                minutes = 0
                 hours++
             }
 
@@ -167,24 +163,6 @@ fun AnalogClockComposable(
                         )
                     }
                 }
-            }
-
-            //Audi Sports
-            drawContext.canvas.nativeCanvas.apply {
-                val text = "Audi Sports"
-                val paint = android.graphics.Paint()
-                paint.textSize = radius * .15f
-                paint.color = clockIngraviour
-
-                val textRect = android.graphics.Rect()
-                paint.getTextBounds(text, 0, text.length, textRect)
-
-                drawText(
-                    text,
-                    size.center.x - (textRect.width() / 2),
-                    size.center.y - 200,
-                    paint
-                )
             }
 
             //now draw the center of the screen
