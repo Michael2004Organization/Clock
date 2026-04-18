@@ -1,26 +1,26 @@
 package com.example.clock
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,31 +28,32 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.clock.Views.AnalogClockComposable
 import com.example.clock.Views.Settings
 import com.example.clock.Views.TextClockComposable
+import com.example.clock.ui.theme.AccentBlue
+import com.example.clock.ui.theme.DeepBackground
+import com.example.clock.ui.theme.SurfaceBackground
+import com.example.clock.ui.theme.TextPrimary
+import com.example.clock.ui.theme.TextSecondary
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.time.Duration.Companion.milliseconds
 
 @Preview
 @Composable
@@ -60,12 +61,12 @@ fun MainView() {
     val navController = rememberNavController()
 
     Scaffold(
+        containerColor = DeepBackground,
         bottomBar = {
             val items = listOf(
                 Pair("clock", painterResource(id = R.drawable.uhr)),
                 Pair("timeStop", painterResource(id = R.drawable.stoppuhr)),
             )
-
             BottomNavigationBar(items, navController)
         }
     ) { paddingValues ->
@@ -74,7 +75,7 @@ fun MainView() {
             startDestination = "clock"
         ) {
             composable("clock") {
-                ClockView(navController)
+                ClockView(navController, modifier = Modifier.padding(paddingValues))
             }
 
             composable("timeStop") {
@@ -82,7 +83,7 @@ fun MainView() {
                     Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
-                        .background(color = Color.Black)
+                        .background(color = DeepBackground)
                 ) {
                     TimeStopView()
                 }
@@ -95,70 +96,63 @@ fun MainView() {
     }
 }
 
-//@Preview
 @Composable
 fun ClockView(
-    navController: NavController
+    navController: NavController,
+    modifier: Modifier = Modifier
 ) {
-    val backgroundColor = Color.Black
-    val backgroundColorApp = colorResource(R.color.appBlack)
-
     Column(
-        Modifier
+        modifier
             .fillMaxSize()
-            .padding(top = 50.dp)
-            .background(color = backgroundColor)
+            .background(color = DeepBackground)
+            .padding(top = 40.dp)
     ) {
+        // Title bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 10.dp),
-            horizontalArrangement = Arrangement.Center,
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 10.dp, top = 10.dp),
-                text = "Uhr",
-                textAlign = TextAlign.Start,
-                color = Color.White,
-                fontSize = 24.sp
+                text = "Clock",
+                color = TextPrimary,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Light,
+                letterSpacing = 2.sp
             )
 
-            IconButton(
-                modifier = Modifier,
-                onClick = {
-                    navController.navigate("settings")
-                },
-            ) {
+            IconButton(onClick = { navController.navigate("settings") }) {
                 Icon(
-                    modifier = Modifier,
                     imageVector = Icons.Default.MoreVert,
-                    tint = Color.White,
-                    contentDescription = "Settings Icon",
+                    tint = TextSecondary,
+                    contentDescription = "Settings"
                 )
             }
         }
 
+        // Digital clock
         TextClockComposable()
 
+        // Analog clock
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.6f)
-                .background(color = backgroundColorApp),
+                .background(color = SurfaceBackground),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             AnalogClock()
         }
 
+        // World clocks
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(0.35f)
-                .padding(bottom = 60.dp)
+                .weight(0.4f)
+                .padding(bottom = 8.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
             CitiesClockInfos()
@@ -171,10 +165,7 @@ fun AnalogClock() {
     var isClockRunning by remember { mutableStateOf(true) }
 
     AnalogClockComposable(
-        modifier = Modifier
-            .clickable {
-                isClockRunning = !isClockRunning
-            },
+        modifier = Modifier.clickable { isClockRunning = !isClockRunning },
         isClockRunning = isClockRunning
     )
 }
@@ -190,64 +181,56 @@ fun CitiesClockInfos() {
         Pair("Sydney", "Australia/Sydney"),
     )
 
-    val coroutineScope = rememberCoroutineScope()
-
     listTimeZones.forEach { city ->
-        val time = remember {
-            mutableStateOf("")
-        }
+        val time = remember { mutableStateOf("") }
+        val offset = remember { mutableStateOf("") }
 
-        var delayTime = (60000L).milliseconds
-
-        LaunchedEffect(Unit) {
+        LaunchedEffect(city.second) {
             while (true) {
-                if (delayTime != (60000).milliseconds) {
-                    delayTime = (60000).milliseconds
-                }
+                val now = ZonedDateTime.now(ZoneId.of(city.second))
+                time.value = now.format(DateTimeFormatter.ofPattern("HH:mm"))
+                offset.value = now.format(DateTimeFormatter.ofPattern("z"))
 
-                coroutineScope.launch {
-                    val currentTime = ZonedDateTime
-                        .now(ZoneId.of(city.second))
-                        .plusSeconds(7)
-
-                    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-
-                    time.value = ZonedDateTime
-                        .now(ZoneId.of(city.second))
-                        .plusSeconds(7)
-                        .format(formatter)
-
-                    delayTime -= (currentTime.second * 1000).milliseconds
-                }
-
-                delay(delayTime)
+                // Sync to next minute boundary
+                val secondsLeft = 60 - now.second
+                delay(secondsLeft * 1000L)
             }
         }
 
-        Row(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp)
-                .border(1.dp, Color.White, CircleShape),
-            horizontalArrangement = Arrangement.Center
+                .padding(horizontal = 16.dp, vertical = 5.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = SurfaceBackground),
         ) {
-            Text(
+            Row(
                 modifier = Modifier
-                    .padding(start = 12.dp),
-                text = "${city.first}: ",
-                color = Color.White,
-                textAlign = TextAlign.Start,
-                fontSize = 28.sp
-            )
-            Text(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 12.dp),
-                text = time.value,
-                color = Color.White,
-                textAlign = TextAlign.End,
-                fontSize = 28.sp
-            )
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = city.first,
+                        color = TextPrimary,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = offset.value,
+                        color = TextSecondary,
+                        fontSize = 13.sp
+                    )
+                }
+                Text(
+                    text = time.value,
+                    color = AccentBlue,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Light
+                )
+            }
         }
     }
 }
@@ -255,14 +238,14 @@ fun CitiesClockInfos() {
 @Composable
 fun TimeStopView() {
     Row(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "TimeStop View",
-            color = Color.White
+            text = "Stopwatch",
+            color = TextPrimary,
+            fontSize = 22.sp
         )
     }
 }
@@ -270,48 +253,46 @@ fun TimeStopView() {
 @Preview
 @Composable
 fun BottomNavigationBar(
-    navItems: List<Pair<String, Painter>> =
-        listOf(
-            Pair("clock", painterResource(id = R.drawable.uhr)),
-            Pair("timeStop", painterResource(id = R.drawable.stoppuhr)),
-        ),
+    navItems: List<Pair<String, Painter>> = listOf(
+        Pair("clock", painterResource(id = R.drawable.uhr)),
+        Pair("timeStop", painterResource(id = R.drawable.stoppuhr)),
+    ),
     navController: NavController = rememberNavController()
 ) {
-    val bottomAppBarColor = Color.Black
-    val iconHeight = 35.dp
-    val iconColor = Color.White
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
 
-    BottomAppBar(
-        modifier = Modifier
-            .height(iconHeight * 2),
-        containerColor = bottomAppBarColor
+    NavigationBar(
+        containerColor = SurfaceBackground,
+        contentColor = AccentBlue,
+        tonalElevation = 0.dp
     ) {
-        Row(
-            modifier = Modifier
-                .height(50.dp)
-                .fillMaxWidth()
-                .padding(5.dp)
-        ) {
-            navItems.forEach { item ->
-                IconButton(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .height(iconHeight)
-                        .weight(1f),
-                    onClick = {
-                        navController.navigate(item.first)
-                    }
-                ) {
+        navItems.forEach { item ->
+            val selected = currentRoute == item.first
+            NavigationBarItem(
+                selected = selected,
+                onClick = { navController.navigate(item.first) },
+                icon = {
                     Icon(
-                        modifier = Modifier
-                            .size(iconHeight),
-                        tint = iconColor,
-                        //imageVector = item.second,
+                        modifier = Modifier.size(26.dp),
                         painter = item.second,
-                        contentDescription = item.first
+                        contentDescription = item.first,
                     )
-                }
-            }
+                },
+                label = {
+                    Text(
+                        text = if (item.first == "clock") "Clock" else "Stopwatch",
+                        fontSize = 12.sp
+                    )
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = AccentBlue,
+                    selectedTextColor = AccentBlue,
+                    indicatorColor = AccentBlue.copy(alpha = 0.15f),
+                    unselectedIconColor = TextSecondary,
+                    unselectedTextColor = TextSecondary
+                )
+            )
         }
     }
 }
