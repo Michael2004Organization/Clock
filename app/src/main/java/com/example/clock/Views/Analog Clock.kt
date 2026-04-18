@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -21,13 +20,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.clock.TestModels.ClockData
+import com.example.clock.ui.theme.IceBlue
+import com.example.clock.ui.theme.SoftWhite
+import com.example.clock.ui.theme.SunsetOrange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
 import java.time.LocalTime
-import java.util.Date
-import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -40,56 +39,42 @@ fun AnalogClockComposable(
     time: LocalTime = LocalTime.now(),
     isClockRunning: Boolean = true
 ) {
-    var seconds by remember { mutableStateOf(time.second + 4) }
+    var seconds by remember { mutableStateOf(time.second) }
     var minutes by remember { mutableStateOf(time.minute) }
-    var hours by remember { mutableStateOf(time.hour + 1) }
+    var hours by remember { mutableStateOf(time.hour) }
 
-    var hourAngle by remember { mutableDoubleStateOf(value = 0.0) }
-
-    // Colors
-    val clockCircleColor = Color.White
-    val timeNumberColor = android.graphics.Color.WHITE
-    val secondLineColor = Color.White
-    val eachFiveSecondLineColor = Color.White
-
-    val clockIngraviour = android.graphics.Color.RED
-    val clockPausedText = android.graphics.Color.MAGENTA
-
-    val centerCircleColor = Color.White
-    val hourLineColor = Color.White
-    val minuteLineColor = Color.White
-    val longSecondLineColor = Color.Red
+    val dialColor = SoftWhite.copy(alpha = 0.95f)
+    val majorTickColor = SoftWhite
+    val minorTickColor = SoftWhite.copy(alpha = 0.65f)
+    val numberColor = android.graphics.Color.WHITE
+    val centerDotColor = IceBlue
+    val hourHandColor = SoftWhite
+    val minuteHandColor = IceBlue
+    val secondHandColor = SunsetOrange
+    val pausedColor = android.graphics.Color.rgb(255, 182, 72)
 
     LaunchedEffect(isClockRunning) {
         if (isClockRunning) {
-            withContext(Dispatchers.IO) {
-                val currentTime = ClockData.getAtomTime()
-
-                hours = currentTime.hour.toInt()
-                minutes = currentTime.minute.toInt()
-                seconds = currentTime.second.toInt()
-            }
+            val currentTime = withContext(Dispatchers.IO) { ClockData.getAtomTime() }
+            hours = currentTime.hour.toIntOrNull() ?: time.hour
+            minutes = currentTime.minute.toIntOrNull() ?: time.minute
+            seconds = currentTime.second.toIntOrNull() ?: time.second
         }
-    }
-
-    LaunchedEffect(key1 = minutes) {
-        hourAngle = (minutes / 60.0 * 30.0) - 90.0 + (hours * 30)
     }
 
     LaunchedEffect(isClockRunning) {
         while (isClockRunning) {
+            delay(1000L)
             seconds += 1
 
-            if (seconds > 60) {
-                seconds = 1
-                minutes++
+            if (seconds >= 60) {
+                seconds = 0
+                minutes += 1
             }
-            if (minutes > 60) {
-                minutes = 1
-                hours++
+            if (minutes >= 60) {
+                minutes = 0
+                hours = (hours + 1) % 24
             }
-
-            delay(1000L)
         }
     }
 
@@ -98,147 +83,113 @@ fun AnalogClockComposable(
         val height = if (minHeight < 1.dp) minSize else minHeight
 
         Canvas(
-            modifier = modifier
-                .size(width, height)
+            modifier = modifier.size(width, height)
         ) {
-            //1. First Step
-            // draw analog clock circle
+            val radius = size.minDimension * 0.46f
 
-            // calculate radius (40% of the radius for responsiveness)
-            val radius = size.width * .60f
             drawCircle(
-                color = clockCircleColor,
-                style = Stroke(width = radius * .05f /* 5% of the radius*/),
+                color = dialColor,
+                style = Stroke(width = radius * 0.08f),
                 radius = radius,
                 center = size.center
             )
 
-            //2. Second Step
-            // draw all second lines
+            (0 until 60).forEach { tick ->
+                val angleInRad = ((tick * 6f - 90f) * (PI / 180f)).toFloat()
+                val isMajorTick = tick % 5 == 0
 
-            //The degree difference between the each 'minute' line
-            val angleDegreeDifference = (360f / 60f)
-
-            //drawing all 60 second lines
-            (1..60).forEach {
-                val angleRadDifference =
-                    (((angleDegreeDifference * it) - 90f) * (PI / 180f)).toFloat()
-
-                val lineLength = if (it % 5 == 0) radius * .88f else radius * .92f
-                val lineColour = if (it % 5 == 0) eachFiveSecondLineColor else secondLineColor
-
-                val startOffsetLine = Offset(
-                    x = lineLength * cos(angleRadDifference) + size.center.x,
-                    y = lineLength * sin(angleRadDifference) + size.center.y
+                val startRadius = if (isMajorTick) radius * 0.78f else radius * 0.86f
+                val start = Offset(
+                    x = startRadius * cos(angleInRad) + size.center.x,
+                    y = startRadius * sin(angleInRad) + size.center.y
                 )
-                val endOffsetLine = Offset(
-                    x = (radius - ((radius * .05f) / 2)) * cos(angleRadDifference) + size.center.x,
-                    y = (radius - ((radius * .05f) / 2)) * sin(angleRadDifference) + size.center.y
+                val end = Offset(
+                    x = radius * cos(angleInRad) + size.center.x,
+                    y = radius * sin(angleInRad) + size.center.y
                 )
-                //draw second line
+
                 drawLine(
-                    color = lineColour,
-                    start = startOffsetLine,
-                    end = endOffsetLine,
-                    strokeWidth = radius * .01f,
+                    color = if (isMajorTick) majorTickColor else minorTickColor,
+                    start = start,
+                    end = end,
+                    strokeWidth = if (isMajorTick) radius * 0.018f else radius * 0.008f,
+                    cap = StrokeCap.Round
                 )
 
-                //draw second digit every 5th second
-                if (it % 5 == 0) {
+                if (isMajorTick) {
                     drawContext.canvas.nativeCanvas.apply {
-                        val positionX =
-                            (radius * .76f) * cos(angleRadDifference) + size.center.x
-                        val positionY =
-                            (radius * .76f) * sin(angleRadDifference) + size.center.y
-
-                        val text = (it / 5).toString()
+                        val number = if (tick == 0) "12" else (tick / 5).toString()
                         val paint = android.graphics.Paint()
-                        paint.textSize = radius * .15f
-                        paint.color = timeNumberColor
+                        paint.textSize = radius * 0.18f
+                        paint.color = numberColor
+                        paint.isAntiAlias = true
 
-                        val textRect = android.graphics.Rect()
-                        paint.getTextBounds(text, 0, text.length, textRect)
+                        val textBounds = android.graphics.Rect()
+                        paint.getTextBounds(number, 0, number.length, textBounds)
+
+                        val textRadius = radius * 0.65f
+                        val textX = textRadius * cos(angleInRad) + size.center.x
+                        val textY = textRadius * sin(angleInRad) + size.center.y
 
                         drawText(
-                            text,
-                            positionX - (textRect.width() / 2),
-                            positionY + (textRect.width() / 2),
+                            number,
+                            textX - (textBounds.width() / 2),
+                            textY + (textBounds.height() / 2),
                             paint
                         )
                     }
                 }
             }
 
-            //Audi Sports
-            drawContext.canvas.nativeCanvas.apply {
-                val text = "Audi Sports"
-                val paint = android.graphics.Paint()
-                paint.textSize = radius * .15f
-                paint.color = clockIngraviour
+            val hourAngle = (((hours % 12) + (minutes / 60f)) * 30f) - 90f
+            val minuteAngle = ((minutes + (seconds / 60f)) * 6f) - 90f
 
-                val textRect = android.graphics.Rect()
-                paint.getTextBounds(text, 0, text.length, textRect)
-
-                drawText(
-                    text,
-                    size.center.x - (textRect.width() / 2),
-                    size.center.y - 200,
-                    paint
-                )
-            }
-
-            //now draw the center of the screen
-            drawCircle(
-                color = centerCircleColor,
-                radius = radius * .03f, //only 2% of the main radius
-                center = size.center
-            )
-
-            //hour-line hand
             drawLine(
-                color = hourLineColor,
+                color = hourHandColor,
                 start = size.center,
                 end = Offset(
-                    x = (radius * .55f) * cos((hourAngle * (PI / 180)).toFloat()) + size.center.x,
-                    y = (radius * .55f) * sin((hourAngle * (PI / 180)).toFloat()) + size.center.y,
+                    x = (radius * 0.52f) * cos((hourAngle * (PI / 180)).toFloat()) + size.center.x,
+                    y = (radius * 0.52f) * sin((hourAngle * (PI / 180)).toFloat()) + size.center.y,
                 ),
-                strokeWidth = radius * .02f,
-                cap = StrokeCap.Square
+                strokeWidth = radius * 0.03f,
+                cap = StrokeCap.Round
             )
 
-            //minutes hand - just dividing the seconds with 60 and multiplying it by 6 degrees (which is the difference between the lines)
-            // subtracting 90 as the 0degrees is actually at 3 o'clock
-            val minutesAngle = (seconds / 60.0 * 6.0) - 90.0 + (minutes * 6.0)
             drawLine(
-                color = minuteLineColor,
+                color = minuteHandColor,
                 start = size.center,
                 end = Offset(
-                    x = (radius * .7f) * cos((minutesAngle * (PI / 180)).toFloat()) + size.center.x,
-                    y = (radius * .7f) * sin((minutesAngle * (PI / 180)).toFloat()) + size.center.y
+                    x = (radius * 0.72f) * cos((minuteAngle * (PI / 180)).toFloat()) + size.center.x,
+                    y = (radius * 0.72f) * sin((minuteAngle * (PI / 180)).toFloat()) + size.center.y,
                 ),
-                strokeWidth = radius * .01f,
-                cap = StrokeCap.Square
+                strokeWidth = radius * 0.018f,
+                cap = StrokeCap.Round
             )
 
-            //seconds line hand
             drawLine(
-                color = longSecondLineColor,
+                color = secondHandColor,
                 start = size.center,
                 end = Offset(
-                    x = (radius * .9f) * cos(seconds.secondsToRad()) + size.center.x,
-                    y = (radius * .9f) * sin(seconds.secondsToRad()) + size.center.y
+                    x = (radius * 0.85f) * cos(seconds.secondsToRadians()) + size.center.x,
+                    y = (radius * 0.85f) * sin(seconds.secondsToRadians()) + size.center.y,
                 ),
                 strokeWidth = 2.dp.toPx(),
                 cap = StrokeCap.Round
             )
 
-            //paused text
+            drawCircle(
+                color = centerDotColor,
+                radius = radius * 0.04f,
+                center = size.center
+            )
+
             if (!isClockRunning) {
                 drawContext.canvas.nativeCanvas.apply {
                     val text = "PAUSED"
                     val paint = android.graphics.Paint()
-                    paint.textSize = radius * .15f
-                    paint.color = clockPausedText
+                    paint.textSize = radius * 0.16f
+                    paint.color = pausedColor
+                    paint.isFakeBoldText = true
 
                     val textRect = android.graphics.Rect()
                     paint.getTextBounds(text, 0, text.length, textRect)
@@ -246,7 +197,7 @@ fun AnalogClockComposable(
                     drawText(
                         text,
                         size.center.x - (textRect.width() / 2),
-                        size.center.y + (textRect.width() / 2),
+                        size.center.y + (textRect.height() / 2),
                         paint
                     )
                 }
@@ -255,8 +206,7 @@ fun AnalogClockComposable(
     }
 }
 
-//return radians
-fun Int.secondsToRad(): Float {
+private fun Int.secondsToRadians(): Float {
     val angle = (360f / 60f * this) - 90f
     return (angle * (PI / 180f)).toFloat()
 }

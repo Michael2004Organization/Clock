@@ -1,3 +1,19 @@
 <resources>
     <string name="app_name">Clock</string>
+    <string name="navigation_clock">Clock</string>
+    <string name="navigation_stopwatch">Stopwatch</string>
+    <string name="clock_title">Clock</string>
+    <string name="world_time_title">World Time</string>
+    <string name="settings_title">Settings</string>
+
+    <string name="stopwatch_placeholder_title">Stopwatch Coming Soon</string>
+    <string name="stopwatch_placeholder_subtitle">This space is ready for start, stop, and lap actions in the next update.</string>
+    <string name="stopwatch_tip">Tip: tap the analog dial to pause or resume the live animation.</string>
+
+    <string name="settings_show_seconds">Show Seconds</string>
+    <string name="settings_show_seconds_desc">Keep second precision visible in digital and analog views.</string>
+    <string name="settings_network_time">Use Network Time</string>
+    <string name="settings_network_time_desc">Try NTP first, then fall back to local device time automatically.</string>
+    <string name="settings_about_title">About This Clock</string>
+    <string name="settings_about_desc">A modern Compose clock with a world-time overview and resilient network synchronization.</string>
 </resources>

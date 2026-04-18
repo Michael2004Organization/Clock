@@ -2,10 +2,18 @@ package com.example.clock.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+val DeepNavy = Color(0xFF0A1020)
+val OceanBlue = Color(0xFF13345F)
+val SlateBlue = Color(0xFF235C7D)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val NightSurface = Color(0xFF1A2738)
+val SkyHighlight = Color(0xFF52B5FF)
+val SunsetOrange = Color(0xFFFF7A45)
+val IceBlue = Color(0xFF97D8FF)
+val SoftWhite = Color(0xFFF5F8FF)
+
+val DayBackground = Color(0xFFF0F6FF)
+val DaySurface = Color(0xFFFFFFFF)
+val DayPrimary = Color(0xFF005A8D)
+val DayOnPrimary = Color(0xFFFFFFFF)
+val DayText = Color(0xFF1A2533)

@@ -1,11 +1,7 @@
 package com.example.clock.Views
 
-import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,29 +11,27 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.clock.R
 import com.example.clock.TestModels.ClockData
 import com.example.clock.ui.theme.ClockTheme
+import com.example.clock.ui.theme.SoftWhite
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.truncate
 
 //@Preview
 @Composable
-fun TextClockComposable() {
+fun TextClockComposable(
+    modifier: Modifier = Modifier
+) {
     var day by remember { mutableStateOf(value = "Mo.,") }
     var month by remember { mutableStateOf(value = "January") }
     var year by remember { mutableStateOf(value = "January") }
@@ -47,63 +41,62 @@ fun TextClockComposable() {
     var minute by remember { mutableStateOf(value = "00") }
     var second by remember { mutableStateOf(value = "00") }
 
-    val coroutineScope = rememberCoroutineScope()
-
     LaunchedEffect(Unit) {
         while (true) {
-            coroutineScope.launch {
-                withContext(Dispatchers.IO) {
-                    val currentTime = ClockData.getAtomTime()
+            val currentTime = withContext(Dispatchers.IO) { ClockData.getAtomTime() }
 
-                    day = currentTime.day
-                    month = currentTime.month
-                    year = currentTime.year
-                    dayDate = currentTime.dayDate
+            day = currentTime.day
+            month = currentTime.month
+            year = currentTime.year
+            dayDate = currentTime.dayDate
+            hour = currentTime.hour
+            minute = currentTime.minute
+            second = currentTime.second
 
-                    hour = currentTime.hour
-                    minute = currentTime.minute
-                    second = currentTime.second
-                }
-            }
             delay(1000L)
         }
     }
 
-    val textColor = Color.White
-    val clockPartsSize = 65.sp
+    val textColor = SoftWhite
+    val clockPartsSize = 56.sp
     val clockHeight = 67.dp
-    val clockAdditionalInfos = 22.sp
+    val clockAdditionalInfos = 20.sp
 
     val clockItems = listOf(hour, ":", minute, ":", second)
 
-    Row(
-        modifier = Modifier
-            .height(clockHeight)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        clockItems.forEach { item ->
-            Text(
-                modifier = Modifier,
-                text = item,
-                textAlign = TextAlign.Start,
-                color = textColor,
-                fontSize = clockPartsSize
-            )
-        }
-    }
-    Row(
-        modifier = Modifier
+    Column(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 10.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 10.dp)
     ) {
         Text(
-            text = "$day $dayDate. $month",
+            modifier = Modifier
+                .height(clockHeight)
+                .fillMaxWidth(),
+            text = clockItems.joinToString(separator = ""),
+            textAlign = TextAlign.Center,
             color = textColor,
-            fontSize = clockAdditionalInfos
+            fontSize = clockPartsSize,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = FontFamily.Monospace
+        )
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 6.dp),
+            text = "$day $dayDate. $month $year",
+            color = textColor.copy(alpha = 0.9f),
+            textAlign = TextAlign.Center,
+            fontSize = clockAdditionalInfos,
+            fontWeight = FontWeight.Medium
+        )
+        Text(
+            modifier = Modifier
+                .fillMaxWidth(),
+            text = "Synchronized with network time when available",
+            color = textColor.copy(alpha = 0.75f),
+            textAlign = TextAlign.Center,
+            fontSize = 12.sp
         )
     }
 }
@@ -114,10 +107,11 @@ fun GreetingPreview() {
     ClockTheme {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(color = colorResource(R.color.appBlack))
+                .fillMaxWidth()
+                .background(color = Color(0xFF111318))
+                .padding(12.dp)
         ) {
-            //TextClockComposable()
+            TextClockComposable()
         }
     }
 }
