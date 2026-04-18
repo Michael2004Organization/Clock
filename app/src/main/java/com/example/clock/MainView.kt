@@ -1,28 +1,36 @@
 package com.example.clock
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.BottomAppBar
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,9 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.clock.Views.AnalogClockComposable
 import com.example.clock.Views.Settings
@@ -54,19 +62,27 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.milliseconds
 
+private val BackgroundColor = Color(0xFF0A0A0A)
+private val SurfaceColor = Color(0xFF1A1A1A)
+private val CardColor = Color(0xFF1E1E2E)
+private val AccentColor = Color(0xFF6C63FF)
+
+data class NavItem(val route: String, val label: String, val icon: ImageVector)
+
 @Preview
 @Composable
 fun MainView() {
     val navController = rememberNavController()
 
-    Scaffold(
-        bottomBar = {
-            val items = listOf(
-                Pair("clock", painterResource(id = R.drawable.uhr)),
-                Pair("timeStop", painterResource(id = R.drawable.stoppuhr)),
-            )
+    val navItems = listOf(
+        NavItem("clock", "Clock", Icons.Filled.Schedule),
+        NavItem("timeStop", "Stopwatch", Icons.Filled.Timer),
+    )
 
-            BottomNavigationBar(items, navController)
+    Scaffold(
+        containerColor = BackgroundColor,
+        bottomBar = {
+            BottomNavigationBar(navItems, navController)
         }
     ) { paddingValues ->
         NavHost(
@@ -74,7 +90,7 @@ fun MainView() {
             startDestination = "clock"
         ) {
             composable("clock") {
-                ClockView(navController)
+                ClockView(navController, paddingValues)
             }
 
             composable("timeStop") {
@@ -82,7 +98,7 @@ fun MainView() {
                     Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
-                        .background(color = Color.Black)
+                        .background(color = BackgroundColor)
                 ) {
                     TimeStopView()
                 }
@@ -95,51 +111,41 @@ fun MainView() {
     }
 }
 
-//@Preview
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClockView(
-    navController: NavController
+    navController: NavController,
+    paddingValues: PaddingValues = PaddingValues()
 ) {
-    val backgroundColor = Color.Black
-    val backgroundColorApp = colorResource(R.color.appBlack)
-
     Column(
         Modifier
             .fillMaxSize()
-            .padding(top = 50.dp)
-            .background(color = backgroundColor)
+            .background(color = BackgroundColor)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 10.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 10.dp, top = 10.dp),
-                text = "Uhr",
-                textAlign = TextAlign.Start,
-                color = Color.White,
-                fontSize = 24.sp
-            )
-
-            IconButton(
-                modifier = Modifier,
-                onClick = {
-                    navController.navigate("settings")
-                },
-            ) {
-                Icon(
-                    modifier = Modifier,
-                    imageVector = Icons.Default.MoreVert,
-                    tint = Color.White,
-                    contentDescription = "Settings Icon",
+        TopAppBar(
+            title = {
+                Text(
+                    text = "Clock",
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp
                 )
-            }
-        }
+            },
+            actions = {
+                IconButton(
+                    onClick = { navController.navigate("settings") }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        tint = Color.White,
+                        contentDescription = "Settings"
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = BackgroundColor
+            )
+        )
 
         TextClockComposable()
 
@@ -147,7 +153,7 @@ fun ClockView(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.6f)
-                .background(color = backgroundColorApp),
+                .background(color = BackgroundColor),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -158,7 +164,7 @@ fun ClockView(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(0.35f)
-                .padding(bottom = 60.dp)
+                .padding(bottom = paddingValues.calculateBottomPadding())
                 .verticalScroll(rememberScrollState()),
         ) {
             CitiesClockInfos()
@@ -208,13 +214,11 @@ fun CitiesClockInfos() {
                 coroutineScope.launch {
                     val currentTime = ZonedDateTime
                         .now(ZoneId.of(city.second))
-                        .plusSeconds(7)
 
                     val formatter = DateTimeFormatter.ofPattern("HH:mm")
 
                     time.value = ZonedDateTime
                         .now(ZoneId.of(city.second))
-                        .plusSeconds(7)
                         .format(formatter)
 
                     delayTime -= (currentTime.second * 1000).milliseconds
@@ -224,30 +228,36 @@ fun CitiesClockInfos() {
             }
         }
 
-        Row(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp)
-                .border(1.dp, Color.White, CircleShape),
-            horizontalArrangement = Arrangement.Center
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = CardColor),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            Text(
+            Row(
                 modifier = Modifier
-                    .padding(start = 12.dp),
-                text = "${city.first}: ",
-                color = Color.White,
-                textAlign = TextAlign.Start,
-                fontSize = 28.sp
-            )
-            Text(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 12.dp),
-                text = time.value,
-                color = Color.White,
-                textAlign = TextAlign.End,
-                fontSize = 28.sp
-            )
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = city.first,
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 18.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = time.value,
+                    color = AccentColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    textAlign = TextAlign.End
+                )
+            }
         }
     }
 }
@@ -261,8 +271,10 @@ fun TimeStopView() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "TimeStop View",
-            color = Color.White
+            text = "Stopwatch",
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Light
         )
     }
 }
@@ -270,48 +282,52 @@ fun TimeStopView() {
 @Preview
 @Composable
 fun BottomNavigationBar(
-    navItems: List<Pair<String, Painter>> =
-        listOf(
-            Pair("clock", painterResource(id = R.drawable.uhr)),
-            Pair("timeStop", painterResource(id = R.drawable.stoppuhr)),
-        ),
+    navItems: List<NavItem> = listOf(
+        NavItem("clock", "Clock", Icons.Filled.Schedule),
+        NavItem("timeStop", "Stopwatch", Icons.Filled.Timer),
+    ),
     navController: NavController = rememberNavController()
 ) {
-    val bottomAppBarColor = Color.Black
-    val iconHeight = 35.dp
-    val iconColor = Color.White
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-    BottomAppBar(
-        modifier = Modifier
-            .height(iconHeight * 2),
-        containerColor = bottomAppBarColor
+    NavigationBar(
+        containerColor = SurfaceColor,
+        tonalElevation = 0.dp
     ) {
-        Row(
-            modifier = Modifier
-                .height(50.dp)
-                .fillMaxWidth()
-                .padding(5.dp)
-        ) {
-            navItems.forEach { item ->
-                IconButton(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .height(iconHeight)
-                        .weight(1f),
-                    onClick = {
-                        navController.navigate(item.first)
-                    }
-                ) {
+        navItems.forEach { item ->
+            NavigationBarItem(
+                icon = {
                     Icon(
-                        modifier = Modifier
-                            .size(iconHeight),
-                        tint = iconColor,
-                        //imageVector = item.second,
-                        painter = item.second,
-                        contentDescription = item.first
+                        imageVector = item.icon,
+                        contentDescription = item.label,
+                        modifier = Modifier.size(24.dp)
                     )
-                }
-            }
+                },
+                label = {
+                    Text(
+                        text = item.label,
+                        fontSize = 12.sp
+                    )
+                },
+                selected = currentRoute == item.route,
+                onClick = {
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = AccentColor,
+                    selectedTextColor = AccentColor,
+                    indicatorColor = Color(0xFF2A2A3E),
+                    unselectedIconColor = Color(0xFF888888),
+                    unselectedTextColor = Color(0xFF888888)
+                )
+            )
         }
     }
 }

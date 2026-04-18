@@ -2,7 +2,6 @@ package com.example.clock.TestModels
 
 import org.apache.commons.net.ntp.NTPUDPClient
 import java.net.InetAddress
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -92,18 +91,12 @@ class ClockData {
                 } else if (pattern.second == 4) {
                     clockValues.dayDate = result
                 } else if (pattern.second == 5) {
-                    val updatedZonedDateTime = zonedDateTime.plusHours(1).minusSeconds(8)
-                    val time = updatedZonedDateTime.format(formatter)
-
-                    val currentTime =
-                        LocalTime.parse(time, DateTimeFormatter.ofPattern(pattern.first))
-
                     clockValues.hour =
-                        if (currentTime.hour < 10) "0${currentTime.hour}" else currentTime.hour.toString()
+                        if (zonedDateTime.hour < 10) "0${zonedDateTime.hour}" else zonedDateTime.hour.toString()
                     clockValues.minute =
-                        if (currentTime.minute < 10) "0${currentTime.minute}" else currentTime.minute.toString()
+                        if (zonedDateTime.minute < 10) "0${zonedDateTime.minute}" else zonedDateTime.minute.toString()
                     clockValues.second =
-                        if (currentTime.second < 10) "0${currentTime.second}" else currentTime.second.toString()
+                        if (zonedDateTime.second < 10) "0${zonedDateTime.second}" else zonedDateTime.second.toString()
 
 //                    clockValues.date =
 //                        Date.from(currentTime.atZone(ZoneId.systemDefault()).toInstant())
