@@ -1,6 +1,5 @@
 package com.example.clock.Views
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,7 +14,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,41 +27,34 @@ import com.example.clock.R
 import com.example.clock.TestModels.ClockData
 import com.example.clock.ui.theme.ClockTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.truncate
 
 //@Preview
 @Composable
 fun TextClockComposable() {
     var day by remember { mutableStateOf(value = "Mo.,") }
     var month by remember { mutableStateOf(value = "January") }
-    var year by remember { mutableStateOf(value = "January") }
+    var year by remember { mutableStateOf(value = "") }
     var dayDate by remember { mutableStateOf(value = "10") }
 
     var hour by remember { mutableStateOf(value = "00") }
     var minute by remember { mutableStateOf(value = "00") }
     var second by remember { mutableStateOf(value = "00") }
 
-    val coroutineScope = rememberCoroutineScope()
-
     LaunchedEffect(Unit) {
         while (true) {
-            coroutineScope.launch {
-                withContext(Dispatchers.IO) {
-                    val currentTime = ClockData.getAtomTime()
+            withContext(Dispatchers.IO) {
+                val currentTime = ClockData.getAtomTime()
 
-                    day = currentTime.day
-                    month = currentTime.month
-                    year = currentTime.year
-                    dayDate = currentTime.dayDate
+                day = currentTime.day
+                month = currentTime.month
+                year = currentTime.year
+                dayDate = currentTime.dayDate
 
-                    hour = currentTime.hour
-                    minute = currentTime.minute
-                    second = currentTime.second
-                }
+                hour = currentTime.hour
+                minute = currentTime.minute
+                second = currentTime.second
             }
             delay(1000L)
         }

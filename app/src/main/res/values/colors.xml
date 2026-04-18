@@ -7,5 +7,8 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="appBlack">#313131</color>
+    <color name="appBlack">#FF0D0D14</color>
+    <color name="surfaceDark">#FF1A1A2E</color>
+    <color name="accentCyan">#FF00BCD4</color>
+    <color name="cardBackground">#FF16213E</color>
 </resources>

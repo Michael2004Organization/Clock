@@ -1,7 +1,7 @@
 package com.example.clock
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,22 +13,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,11 +50,9 @@ import com.example.clock.Views.AnalogClockComposable
 import com.example.clock.Views.Settings
 import com.example.clock.Views.TextClockComposable
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.time.Duration.Companion.milliseconds
 
 @Preview
 @Composable
@@ -100,8 +100,8 @@ fun MainView() {
 fun ClockView(
     navController: NavController
 ) {
-    val backgroundColor = Color.Black
-    val backgroundColorApp = colorResource(R.color.appBlack)
+    val backgroundColor = colorResource(R.color.appBlack)
+    val backgroundColorApp = colorResource(R.color.surfaceDark)
 
     Column(
         Modifier
@@ -120,7 +120,7 @@ fun ClockView(
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 10.dp, top = 10.dp),
-                text = "Uhr",
+                text = "Clock",
                 textAlign = TextAlign.Start,
                 color = Color.White,
                 fontSize = 24.sp
@@ -190,63 +190,46 @@ fun CitiesClockInfos() {
         Pair("Sydney", "Australia/Sydney"),
     )
 
-    val coroutineScope = rememberCoroutineScope()
-
     listTimeZones.forEach { city ->
         val time = remember {
             mutableStateOf("")
         }
 
-        var delayTime = (60000L).milliseconds
-
         LaunchedEffect(Unit) {
             while (true) {
-                if (delayTime != (60000).milliseconds) {
-                    delayTime = (60000).milliseconds
-                }
+                val now = ZonedDateTime.now(ZoneId.of(city.second))
+                val formatter = DateTimeFormatter.ofPattern("HH:mm")
+                time.value = now.format(formatter)
 
-                coroutineScope.launch {
-                    val currentTime = ZonedDateTime
-                        .now(ZoneId.of(city.second))
-                        .plusSeconds(7)
-
-                    val formatter = DateTimeFormatter.ofPattern("HH:mm")
-
-                    time.value = ZonedDateTime
-                        .now(ZoneId.of(city.second))
-                        .plusSeconds(7)
-                        .format(formatter)
-
-                    delayTime -= (currentTime.second * 1000).milliseconds
-                }
-
-                delay(delayTime)
+                val secondsUntilNextMinute = 60 - now.second
+                val millisUntilNextMinute = secondsUntilNextMinute * 1000L - now.nano / 1_000_000
+                delay(millisUntilNextMinute.coerceAtLeast(1000L))
             }
         }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp)
-                .border(1.dp, Color.White, CircleShape),
-            horizontalArrangement = Arrangement.Center
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+                .background(
+                    color = colorResource(R.color.cardBackground),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                modifier = Modifier
-                    .padding(start = 12.dp),
-                text = "${city.first}: ",
-                color = Color.White,
+                text = city.first,
+                color = Color(0xFFB0BEC5),
                 textAlign = TextAlign.Start,
-                fontSize = 28.sp
+                fontSize = 18.sp
             )
             Text(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 12.dp),
                 text = time.value,
                 color = Color.White,
                 textAlign = TextAlign.End,
-                fontSize = 28.sp
+                fontSize = 22.sp
             )
         }
     }
@@ -254,16 +237,92 @@ fun CitiesClockInfos() {
 
 @Composable
 fun TimeStopView() {
-    Row(
+    val backgroundColor = colorResource(R.color.appBlack)
+    var isRunning by remember { mutableStateOf(false) }
+    var elapsedMillis by remember { mutableLongStateOf(0L) }
+    var startTime by remember { mutableLongStateOf(0L) }
+    var accumulatedMillis by remember { mutableLongStateOf(0L) }
+
+    LaunchedEffect(isRunning) {
+        if (isRunning) {
+            startTime = System.currentTimeMillis()
+            while (isRunning) {
+                delay(10L)
+                elapsedMillis = accumulatedMillis + (System.currentTimeMillis() - startTime)
+            }
+        }
+    }
+
+    val hours = (elapsedMillis / 3600000).toInt()
+    val minutes = ((elapsedMillis % 3600000) / 60000).toInt()
+    val seconds = ((elapsedMillis % 60000) / 1000).toInt()
+    val centiseconds = ((elapsedMillis % 1000) / 10).toInt()
+
+    val timeText = String.format("%02d:%02d:%02d.%02d", hours, minutes, seconds, centiseconds)
+
+    Column(
         modifier = Modifier
-            .fillMaxSize(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxSize()
+            .background(color = backgroundColor),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "TimeStop View",
-            color = Color.White
+            text = "Stopwatch",
+            color = Color(0xFFB0BEC5),
+            fontSize = 20.sp,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
+
+        Text(
+            text = timeText,
+            color = Color.White,
+            fontSize = 48.sp,
+            modifier = Modifier.padding(bottom = 40.dp)
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Button(
+                onClick = {
+                    if (isRunning) {
+                        isRunning = false
+                        accumulatedMillis = elapsedMillis
+                    } else {
+                        isRunning = true
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isRunning) Color(0xFFFF5252) else Color(0xFF00BCD4)
+                ),
+                modifier = Modifier.size(100.dp, 48.dp),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Text(
+                    text = if (isRunning) "Stop" else "Start",
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+            }
+
+            OutlinedButton(
+                onClick = {
+                    isRunning = false
+                    elapsedMillis = 0L
+                    accumulatedMillis = 0L
+                },
+                border = BorderStroke(1.dp, Color(0xFF607D8B)),
+                modifier = Modifier.size(100.dp, 48.dp),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Text(
+                    text = "Reset",
+                    color = Color(0xFF607D8B),
+                    fontSize = 16.sp
+                )
+            }
+        }
     }
 }
 
@@ -277,7 +336,7 @@ fun BottomNavigationBar(
         ),
     navController: NavController = rememberNavController()
 ) {
-    val bottomAppBarColor = Color.Black
+    val bottomAppBarColor = colorResource(R.color.appBlack)
     val iconHeight = 35.dp
     val iconColor = Color.White
 
