@@ -202,7 +202,8 @@ fun CitiesClockInfos() {
                 time.value = now.format(formatter)
 
                 val secondsUntilNextMinute = 60 - now.second
-                delay(secondsUntilNextMinute * 1000L)
+                val millisUntilNextMinute = secondsUntilNextMinute * 1000L - now.nano / 1_000_000
+                delay(millisUntilNextMinute.coerceAtLeast(1000L))
             }
         }
 

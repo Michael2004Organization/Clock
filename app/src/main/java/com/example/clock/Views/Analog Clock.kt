@@ -73,7 +73,6 @@ fun AnalogClockComposable(
 
     LaunchedEffect(isClockRunning) {
         while (isClockRunning) {
-            delay(1000L)
             seconds += 1
 
             if (seconds >= 60) {
@@ -84,6 +83,8 @@ fun AnalogClockComposable(
                 minutes = 0
                 hours = (hours + 1) % 24
             }
+
+            delay(1000L)
         }
     }
 
