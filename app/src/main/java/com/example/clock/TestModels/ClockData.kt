@@ -19,49 +19,33 @@ class ClockData {
         var hour: String,
         var minute: String,
         var second: String,
-
-        //var date: Date
     )
 
     companion object {
         fun getAtomTime(): ClockValues {
-            val ntpTime = getNtpTime()
+            // Fall back to device time if NTP is unavailable
+            val ntpTime = getNtpTime() ?: Date()
 
-            var currentTime = ClockValues(
-                "", "", "", "",
-                "", "", ""
-            )
-
-            if (ntpTime != null) {
-                currentTime = formatTime(ntpTime, currentTime)
-            }
-
-            return currentTime
+            return formatTime(ntpTime, ClockValues("", "", "", "", "", "", ""))
         }
 
         fun getNtpTime(): Date? {
             val client = NTPUDPClient()
-            //val timeServer = "pool.ntp.org"
-            //val timeServer = "ptbtime1.ptb.de"
             val timeServer = "time.google.com"
-            val inetAddress = InetAddress.getByName(timeServer)
-
-            try {
-                //Anfrage an den NTP-Server
+            return try {
+                val inetAddress = InetAddress.getByName(timeServer)
                 val timeInfo = client.getTime(inetAddress)
-
-                //Empfange Zeitstempel und konvertiere ihn in ein Date-Objekt
-                return Date(timeInfo.message.transmitTimeStamp.time)
-
+                Date(timeInfo.message.transmitTimeStamp.time)
             } catch (e: Exception) {
-                e.printStackTrace()
-                return null
+                null
             }
         }
 
         fun formatTime(
             date: Date, clockValues: ClockValues
         ): ClockValues {
+            val zonedDateTime = ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault())
+
             val patterns = listOf(
                 Pair("EEE", 1),
                 Pair("MMMM", 2),
@@ -71,42 +55,24 @@ class ClockData {
             )
 
             patterns.forEach { pattern ->
-//                val formatter = SimpleDateFormat(pattern.first, Locale.GERMANY)
-//                formatter.timeZone = TimeZone.getTimeZone("Europe/Berlin")
-//                val time = formatter.format(date)
-//                time = formatter.format(Date(formatter.parse(time)!!.time - 8 * 1000))
-
-                //Auto
-                val zonedDateTime =
-                    ZonedDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault())
-
                 val formatter = DateTimeFormatter.ofPattern(pattern.first)
-                val result = zonedDateTime.format(formatter)
 
-                if (pattern.second == 1) {
-                    clockValues.day = result
-                } else if (pattern.second == 2) {
-                    clockValues.month = result
-                } else if (pattern.second == 3) {
-                    clockValues.year = result
-                } else if (pattern.second == 4) {
-                    clockValues.dayDate = result
-                } else if (pattern.second == 5) {
-                    val updatedZonedDateTime = zonedDateTime.plusHours(1).minusSeconds(8)
-                    val time = updatedZonedDateTime.format(formatter)
-
-                    val currentTime =
-                        LocalTime.parse(time, DateTimeFormatter.ofPattern(pattern.first))
-
-                    clockValues.hour =
-                        if (currentTime.hour < 10) "0${currentTime.hour}" else currentTime.hour.toString()
-                    clockValues.minute =
-                        if (currentTime.minute < 10) "0${currentTime.minute}" else currentTime.minute.toString()
-                    clockValues.second =
-                        if (currentTime.second < 10) "0${currentTime.second}" else currentTime.second.toString()
-
-//                    clockValues.date =
-//                        Date.from(currentTime.atZone(ZoneId.systemDefault()).toInstant())
+                when (pattern.second) {
+                    1 -> clockValues.day = zonedDateTime.format(formatter)
+                    2 -> clockValues.month = zonedDateTime.format(formatter)
+                    3 -> clockValues.year = zonedDateTime.format(formatter)
+                    4 -> clockValues.dayDate = zonedDateTime.format(formatter)
+                    5 -> {
+                        val currentTime = LocalTime.of(
+                            zonedDateTime.hour, zonedDateTime.minute, zonedDateTime.second
+                        )
+                        clockValues.hour =
+                            if (currentTime.hour < 10) "0${currentTime.hour}" else currentTime.hour.toString()
+                        clockValues.minute =
+                            if (currentTime.minute < 10) "0${currentTime.minute}" else currentTime.minute.toString()
+                        clockValues.second =
+                            if (currentTime.second < 10) "0${currentTime.second}" else currentTime.second.toString()
+                    }
                 }
             }
 
